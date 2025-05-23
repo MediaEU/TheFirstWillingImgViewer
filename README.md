@@ -1,0 +1,1 @@
+Goal: To create a simple image viewer that is focused on simplicity, unlike Windows 10's default bullshit viewer.
