@@ -5,28 +5,69 @@
 import os
 from tkinter import (
     Tk, Label, Button, Entry, Scale, HORIZONTAL,
-    filedialog, Canvas, Toplevel, Frame, LabelFrame, Scrollbar
+    filedialog, Canvas, Toplevel, Frame, LabelFrame, 
+    Scrollbar, DISABLED, NORMAL, PhotoImage
 )
 from tkinter import ttk
 import tkinter.font as tkFont
 from tooltip import ToolTip
 from PIL import Image, ImageTk, ImageOps
-
+from image_loader import load_image
 
 class TheFirstWillingImgViewer:
     def __init__(self, root):
         self.root = root
         self.root["background"] = "gray15"
-        self.root.title("Image Explorer")
         self.root.grid_columnconfigure((0), weight=1)
         # self.root.grid_columnconfigure((1), weight=0)
         self.root.grid_rowconfigure((0), weight=1)
         self.root.grid_rowconfigure((1), weight=0)
         
+        #Files operations images
+        open_dir = load_image("open_folder.png", subfolder="Files", size=(32, 32))
+        preview_ico = load_image("preview.png", subfolder="Files", size=(32, 32))
+        previous_ico = load_image("previous.png", subfolder="Files", size=(32, 32))
+        next_ico = load_image("next.png", subfolder="Files", size=(32, 32))
+
+        #Zoom operations images
+        zoom_in_ico = load_image("zoom_in.png", subfolder="Zoom", size=(32, 32))
+        zoom_out_ico = load_image("zoom_out.png", subfolder="Zoom", size=(32, 32))
+        fit2screen_ico = load_image("maximize.png", subfolder="Zoom", size=(32, 32))
+        reset_zoom_ico = load_image("image.png", subfolder="Zoom", size=(32, 32))
+
+        #Align operations images
+        align_center_ico = load_image("align_center.png", subfolder="Align", size=(32, 32))
+        align_left_ico = load_image("align_left.png", subfolder="Align", size=(32, 32))
+        align_right_ico = load_image("align_right.png", subfolder="Align", size=(32, 32))
+
+        #Other images
+        clockwise_ico = load_image("clockwise.png", size=(24,24))
+        hide_ico = load_image("hide.png", size=(24,24))
+        show_ico = load_image("show.png", size=(24,24))
+        open_img_ico = load_image("open_image.png", size=(32,32))
+
+        self.icons = {
+            "open_dir": open_dir,
+            "preview_ico": preview_ico,
+            "previous_ico": previous_ico,
+            "next_ico": next_ico,
+            "zoom_in_ico": zoom_in_ico,
+            "zoom_out_ico": zoom_out_ico,
+            "fit2screen_ico": fit2screen_ico,
+            "reset_zoom_ico": reset_zoom_ico,
+            "align_center_ico": align_center_ico,
+            "align_left_ico": align_left_ico,
+            "align_right_ico": align_right_ico,
+            "clockwise_ico": clockwise_ico,
+            "hide_ico": hide_ico,
+            "show_ico": show_ico,
+            "open_img_ico": open_img_ico
+        }
 
         self.custom_font = tkFont.Font(family="Arial", size=10, weight=tkFont.BOLD)
         self.custom_font2 = tkFont.Font(family="Arial", size=16, weight=tkFont.BOLD)
         self.custom_font_bold = tkFont.Font(size=10, weight=tkFont.BOLD)
+
         self.style_button = {
             "font": self.custom_font_bold,
             "relief": "flat",
@@ -75,10 +116,10 @@ class TheFirstWillingImgViewer:
         self.control_frame.grid(column=0, row=0, sticky="wesn")
         self.widgets_to_toggle.append(self.control_frame)
 
-        main_frame_controls = Frame(self.control_frame, background="gray15")
-        main_frame_controls.grid(row=0, column=0, sticky="we", padx=10)
+        self.main_frame_controls = Frame(self.control_frame, background="gray15")
+        self.main_frame_controls.grid(row=0, column=0, sticky="we", padx=10)
         # Buttons and other controls
-        self.zoom_label = Label(main_frame_controls, 
+        self.zoom_label = Label(self.main_frame_controls, 
                                 text="Zoom: 100%", 
                                 width=10,
                                 bg="gray15",
@@ -86,83 +127,117 @@ class TheFirstWillingImgViewer:
                                 font=self.custom_font)
         self.zoom_label.grid(row=0, column=0, padx=6)
 
-        open_dir = Button(main_frame_controls, 
+        self.bt_open_img = Button(self.main_frame_controls, 
+                          text="Open image", 
+                          command=self.open_img,
+                          image=self.icons["open_img_ico"],
+                          **self.style_button)
+        self.add_hover_effect(self.bt_open_img)
+        ToolTip(self.bt_open_img, "Open image")
+        self.bt_open_img.grid(row=0, column=1, padx=6)
+
+
+        #Open directories is experimental...
+        #TODO Implement a proper directory preview...
+        self.bt_open_dir = Button(self.main_frame_controls, 
                           text="Open Folder", 
                           command=self.open_folder,
+                          image=self.icons["open_dir"],
                           **self.style_button)
-        self.add_hover_effect(open_dir)
+        self.add_hover_effect(self.bt_open_dir)
+        ToolTip(self.bt_open_dir, "Open directory")
+        self.bt_open_dir.grid(row=0, column=2, padx=(20,6))
 
-        ToolTip(open_dir, "Open directory")
-        open_dir.grid(row=0, column=1, padx=6)
-        preview = Button(main_frame_controls, 
+        self.bt_preview = Button(self.main_frame_controls, 
                          text="Preview All", 
                          command=self.open_preview_window,
+                         image=self.icons["preview_ico"],
+                         state=DISABLED,
                          **self.style_button)
-        self.add_hover_effect(preview)
-        preview.grid(row=0, column=2)
-        previous = Button(main_frame_controls, 
+        self.add_hover_effect(self.bt_preview)
+        self.bt_preview.grid(row=0, column=3)
+        ToolTip(self.bt_preview, "Experimental: Preview directory")
+
+        self.bt_previous = Button(self.main_frame_controls, 
                           text="Previous", 
                           command=self.prev_image,
+                          image=self.icons["previous_ico"],
+                          state=DISABLED,
                           **self.style_button)
-        self.add_hover_effect(previous)
-        previous.grid(row=0, column=3, padx=6)
-        next_img = Button(main_frame_controls, 
+        self.add_hover_effect(self.bt_previous)
+        self.bt_previous.grid(row=0, column=4, padx=6)
+        ToolTip(self.bt_previous, "Previous")
+
+        self.bt_next_img = Button(self.main_frame_controls, 
                           text="Next", 
                           command=self.next_image,
+                          image=self.icons["next_ico"],
+                          state=DISABLED,
                           **self.style_button)
-        self.add_hover_effect(next_img)
-        next_img.grid(row=0, column=4)
+        self.add_hover_effect(self.bt_next_img)
+        self.bt_next_img.grid(row=0, column=5, padx=(0,20))
+        ToolTip(self.bt_next_img, "Next")
         
 
         #Zoom Frame
-        main_frame_zoom = Frame(self.control_frame, background="gray15")
-        main_frame_zoom.grid(row=0, column=1, sticky="wesn")
-        labelframe = LabelFrame(main_frame_zoom, 
+        self.main_frame_zoom = Frame(self.control_frame, background="gray15")
+        self.main_frame_zoom.grid(row=0, column=1, sticky="wesn")
+        self.labelframe = LabelFrame(self.main_frame_zoom, 
                                 text=" Zoom ", 
                                 background="gray15", 
                                 foreground="cyan")
-        labelframe.grid(row=0, column=0, ipady=4)
+        self.labelframe.grid(row=0, column=0, ipady=4)
 
-        frame_zoom = Frame(labelframe, background="gray15")
-        frame_zoom.grid(row=0, column=0)
-        zoom_in = Button(frame_zoom, 
+        self.frame_zoom = Frame(self.labelframe, background="gray15")
+        self.frame_zoom.grid(row=0, column=0)
+        self.bt_zoom_in = Button(self.frame_zoom, 
                          text="Zoom In", 
                          command=lambda: self.scale_image(1.2),
+                         image=self.icons["zoom_in_ico"],
                          **self.style_button)
-        self.add_hover_effect(zoom_in, hover_bg="green", hover_fg="white")
-        ToolTip(zoom_in, "Zoom In")
-        zoom_in.grid(row=0, column=0, padx=6)
-        zoom_out = Button(frame_zoom, 
+        self.add_hover_effect(self.bt_zoom_in, hover_bg="green", hover_fg="white")
+        ToolTip(self.bt_zoom_in, "Zoom In")
+        self.bt_zoom_in.grid(row=0, column=0, padx=6)
+
+        self.bt_zoom_out = Button(self.frame_zoom, 
                           text="Zoom Out", 
                           command=lambda: self.scale_image(0.8),
+                          image=self.icons["zoom_out_ico"],
                           **self.style_button)
-        self.add_hover_effect(zoom_out, hover_bg="green", hover_fg="white")
-        ToolTip(zoom_out, "Zoom Out")
-        zoom_out.grid(row=0, column=1)
-        fitscreen = Button(frame_zoom, 
+        self.add_hover_effect(self.bt_zoom_out, hover_bg="green", hover_fg="white")
+        ToolTip(self.bt_zoom_out, "Zoom Out")
+        self.bt_zoom_out.grid(row=0, column=1)
+
+        self.bt_fitscreen = Button(self.frame_zoom, 
                            text="Fit to Screen", 
                            command=self.fit_to_screen,
+                           image=self.icons["fit2screen_ico"],
                            **self.style_button)
-        self.add_hover_effect(fitscreen, hover_bg="green", hover_fg="white")
-        ToolTip(fitscreen, "Fit to Screen")
-        fitscreen.grid(row=0, column=2, padx=6)
-        reset_zoom = Button(frame_zoom, 
+        self.add_hover_effect(self.bt_fitscreen, hover_bg="green", hover_fg="white")
+        ToolTip(self.bt_fitscreen, "Fit to Screen")
+        self.bt_fitscreen.grid(row=0, column=2, padx=6)
+
+        self.bt_reset_zoom = Button(self.frame_zoom, 
                             text="Reset Zoom", 
                             command=self.reset_zoom,
+                            image=self.icons["reset_zoom_ico"],
                             **self.style_button)
-        self.add_hover_effect(reset_zoom, hover_bg="green", hover_fg="white")
-        ToolTip(reset_zoom, "Reset Zoom")
-        reset_zoom.grid(row=0, column=3)
-        self.zoom_entry = Entry(frame_zoom, 
+        self.add_hover_effect(self.bt_reset_zoom, hover_bg="green", hover_fg="white")
+        ToolTip(self.bt_reset_zoom, "Reset Zoom")
+        self.bt_reset_zoom.grid(row=0, column=3)
+
+        self.zoom_entry = Entry(self.frame_zoom, 
                                 width=6,
                                 highlightbackground="crimson", 
-                                relief="groove",
+                                relief="flat",
                                 font=self.custom_font_bold,
                                 background="gray20",
-                                fg="SlateGray1")
+                                fg="SlateGray1",
+                                insertbackground='cyan')
         self.zoom_entry.insert(0, "100")
         self.zoom_entry.grid(row=0, column=4, padx=(12,0))
-        set_zoom = Button(frame_zoom, 
+        
+        self.bt_set_zoom = Button(self.frame_zoom, 
                           text="Set", 
                           width=3,
                           command=self.set_custom_zoom, 
@@ -170,61 +245,65 @@ class TheFirstWillingImgViewer:
                           font=self.custom_font_bold,
                           fg="springgreen",
                           bg="gray15")
-        self.add_hover_effect(set_zoom, hover_bg="orange", hover_fg="white", normal_bg="gray15", normal_fg="springgreen")
-        ToolTip(set_zoom, "Set explicit zoom %")                  
-        set_zoom.grid(row=0, column=5)
+        self.add_hover_effect(self.bt_set_zoom, hover_bg="orange", hover_fg="white", normal_bg="gray15", normal_fg="springgreen")
+        ToolTip(self.bt_set_zoom, "Set explicit zoom %")                  
+        self.bt_set_zoom.grid(row=0, column=5)
         
 
         #Align Frame
-        main_frame_align = Frame(self.control_frame, background="gray15")
-        main_frame_align.grid(row=0, column=2, sticky="wesn", padx=10)
-        labelframe_align = LabelFrame(main_frame_align, 
+        self.main_frame_align = Frame(self.control_frame, background="gray15")
+        self.main_frame_align.grid(row=0, column=2, sticky="wesn", padx=10)
+        self.labelframe_align = LabelFrame(self.main_frame_align, 
                                       text=" Align ",
                                       background="gray15", 
                                       foreground="cyan")
-        labelframe_align.grid(row=0, column=0, ipady=4, ipadx=4)
-        frame_align = Frame(labelframe_align, 
+        self.labelframe_align.grid(row=0, column=0, ipady=4, ipadx=4)
+
+        self.frame_align = Frame(self.labelframe_align, 
                             background="gray15")
-        frame_align.pack()
-        align_left = Button(frame_align, 
+        self.frame_align.pack()
+
+        self.bt_align_left = Button(self.frame_align, 
                             text="🠈", 
-                            command=self.align_left, 
+                            command=self.align_left,
+                            image=self.icons["align_left_ico"],
                             font=self.custom_font,
                             foreground="yellow", 
                             background="gray20",
-                            width=3,
                             relief="flat")
-        align_left.grid(row=0, column=0)
-        self.add_hover_effect(align_left, hover_bg="orange", hover_fg="white", normal_bg="gray15", normal_fg="yellow")
-        ToolTip(align_left, "Left side")
-        align_center = Button(frame_align, 
+        self.bt_align_left.grid(row=0, column=0)
+        self.add_hover_effect(self.bt_align_left, hover_bg="orange", hover_fg="white", normal_bg="gray15", normal_fg="yellow")
+        ToolTip(self.bt_align_left, "Left side")
+
+        self.bt_align_center = Button(self.frame_align, 
                               text="⬌", 
                               command=self.center_image,
+                              image=self.icons["align_center_ico"],
                               font=self.custom_font,
                               foreground="yellow", 
                               background="gray20",
-                              width=3,
                               relief="flat")
-        align_center.grid(row=0, column=1)
-        self.add_hover_effect(align_center, hover_bg="orange", hover_fg="white", normal_bg="gray15", normal_fg="yellow")
-        ToolTip(align_center, "Center")
-        align_right = Button(frame_align, 
+        self.bt_align_center.grid(row=0, column=1, padx=6)
+        self.add_hover_effect(self.bt_align_center, hover_bg="orange", hover_fg="white", normal_bg="gray15", normal_fg="yellow")
+        ToolTip(self.bt_align_center, "Center")
+
+        self.bt_align_right = Button(self.frame_align, 
                              text="🠊", 
                              command=self.align_right,
+                             image=self.icons["align_right_ico"],
                              font=self.custom_font,
                              foreground="yellow", 
                              background="gray20",
-                             width=3,
                              relief="flat")
-        align_right.grid(row=0, column=2)
-        self.add_hover_effect(align_right, hover_bg="orange", hover_fg="white", normal_bg="gray15", normal_fg="yellow")
-        ToolTip(align_right, "Right side")
+        self.bt_align_right.grid(row=0, column=2)
+        self.add_hover_effect(self.bt_align_right, hover_bg="orange", hover_fg="white", normal_bg="gray15", normal_fg="yellow")
+        ToolTip(self.bt_align_right, "Right side")
 
 
         # Zoom slider
-        main_frame_slider = Frame(self.control_frame, bg="gray15", width=200)
-        main_frame_slider.grid(row=0, column=3, sticky="wesn", padx=10)
-        self.zoom_slider = Scale(main_frame_slider, 
+        self.main_frame_slider = Frame(self.control_frame, bg="gray15", width=200)
+        self.main_frame_slider.grid(row=0, column=3, sticky="wesn", padx=10)
+        self.zoom_slider = Scale(self.main_frame_slider, 
                                  from_=10, 
                                  to=300, 
                                  orient=HORIZONTAL,
@@ -235,12 +314,13 @@ class TheFirstWillingImgViewer:
                                  troughcolor="gray20",
                                  borderwidth=0,
                                  border=0,
-                                 highlightthickness=0)
+                                 highlightthickness=0,
+                                 activebackground="crimson")
         self.zoom_slider.set(100)
         self.zoom_slider.grid(sticky="wesn")
 
         # Rotation widget
-        self.rotate_slider = Scale(main_frame_slider, 
+        self.rotate_slider = Scale(self.main_frame_slider, 
                                    from_=0, to=360, 
                                    orient=HORIZONTAL,
                                    label="Rotate°", 
@@ -251,17 +331,19 @@ class TheFirstWillingImgViewer:
                                    troughcolor="gray20",
                                    borderwidth=0,
                                    border=0,
-                                   highlightthickness=0)
+                                   highlightthickness=0,
+                                   activebackground="crimson")
         self.rotate_slider.set(0)
         self.rotate_slider.grid(row=0, column=1, sticky="wesn", padx=4)
 
-        self.bt_clockwise = Button(main_frame_slider, command=self.clockwise,
+        self.bt_clockwise = Button(self.main_frame_slider, command=self.clockwise,
                                    text="Clk",
+                                   image=self.icons["clockwise_ico"],
                                    bg="gray20",
                                    fg="SlateGray1",
                                    relief="flat")
-        self.bt_clockwise.grid(row=0, column=2)
-        ToolTip(self.bt_clockwise, "Rotate clockwise")
+        self.bt_clockwise.grid(row=0, column=2, sticky="s")
+        ToolTip(self.bt_clockwise, "Toggle rotate clockwise")
 
 
         # Hide Frame
@@ -269,15 +351,16 @@ class TheFirstWillingImgViewer:
         self.hide_frame.grid(row=1, column=2, sticky="e")
         self.widgets_to_toggle.append(self.hide_frame)
         # Hide button on far right of control_frame
-        hide = Button(self.hide_frame, 
+        self.bt_hide = Button(self.hide_frame, 
                text="↧", 
-               command=self.hide_widgets, 
+               command=self.hide_widgets,
+                image=self.icons["hide_ico"],
                relief="flat",
                bg="gray20",
                fg="crimson",
                font=self.custom_font2)
-        hide.grid(row=0, column=0, sticky="e")
-        ToolTip(hide, "Hide Bar")
+        self.bt_hide.grid(row=0, column=0, sticky="e")
+        ToolTip(self.bt_hide, "Hide Bar")
 
     def setup_bindings(self):
         self.canvas.bind("<MouseWheel>", self.mouse_zoom)
@@ -286,13 +369,11 @@ class TheFirstWillingImgViewer:
 
     def clockwise(self):
         self.clockwise_bool = not self.clockwise_bool
-        color = self.bt_clockwise.cget('bg')
-        print(color)
+        # color = self.bt_clockwise.cget('bg')
         if self.bt_clockwise.cget('bg') == 'gray20':
             self.bt_clockwise.configure(background="red")
         else:
             self.bt_clockwise.configure(background="gray20")
-
 
     def open_folder(self):
         folder = filedialog.askdirectory()
@@ -304,6 +385,26 @@ class TheFirstWillingImgViewer:
             ])
             self.current_index = 0
             self.load_image()
+            self.toggle_enable_state()
+
+    def toggle_enable_state(self):
+        """Toggle button state"""
+        self.bt_preview.configure(state=NORMAL)
+        self.bt_previous.configure(state=NORMAL)
+        self.bt_next_img.configure(state=NORMAL)
+
+    def open_img(self):
+        self.img = filedialog.askopenfilename(filetypes=[("Image files", "*.jpg *.jpeg *.png *.bmp *.gif")])
+        self.load_image_only(self.img)
+
+    def load_image_only(self, img_path):
+        self.original_image = Image.open(img_path)
+        self.zoom = 1.0
+        self.rotation = 0
+        self.zoom_slider.set(100)
+        self.rotate_slider.set(0)
+        self.display_scaled_image()
+        self.update_zoom_label()
 
     def load_image(self):
         if not self.image_paths:
@@ -505,7 +606,8 @@ class TheFirstWillingImgViewer:
 
         # Hide/Show bar
         self.show_button = Button(self.root, text="↥", 
-                                  command=self.show_widgets, 
+                                  command=self.show_widgets,
+                                  image=self.icons["show_ico"],
                                   background="grey5", 
                                   foreground="cyan", 
                                   relief="flat",
@@ -561,6 +663,10 @@ class TheFirstWillingImgViewer:
 
 if __name__ == "__main__":
     root = Tk()
+    icon = PhotoImage(r'M:\Coding\TheFirstWillingImgViewer\assets\love_birds.ico')
+    root.iconbitmap(icon)
+    root.title("TheFirstWillingImgViewer")
     root.geometry("1400x800")
+
     app = TheFirstWillingImgViewer(root)
     root.mainloop()
