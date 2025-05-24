@@ -2,7 +2,7 @@
 # GNU GENERAL PUBLIC LICENSE
 # Version 2, June 1991
 
-import os
+import os, sys
 from tkinter import (
     Tk, Label, Button, Entry, Scale, HORIZONTAL,
     filedialog, Canvas, Toplevel, Frame, LabelFrame, 
@@ -13,9 +13,10 @@ import tkinter.font as tkFont
 from tooltip import ToolTip
 from PIL import Image, ImageTk, ImageOps
 from image_loader import load_image
+import pillow_avif  # Needed to register the AVIF plugin
 
 class TheFirstWillingImgViewer:
-    def __init__(self, root):
+    def __init__(self, root, open_with_arg=None):
         self.root = root
         self.root["background"] = "gray15"
         self.root.grid_columnconfigure((0), weight=1)
@@ -91,6 +92,9 @@ class TheFirstWillingImgViewer:
         self.containers()
         self.setup_ui()
         self.setup_bindings()
+
+        if open_with_arg:
+            self.load_image_only(open_with_arg)
 
 
     def containers(self):
@@ -381,7 +385,7 @@ class TheFirstWillingImgViewer:
             self.image_paths = sorted([
                 os.path.join(folder, f)
                 for f in os.listdir(folder)
-                if f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp', '.gif'))
+                if f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp', '.gif', '.avif'))
             ])
             self.current_index = 0
             self.load_image()
@@ -394,7 +398,7 @@ class TheFirstWillingImgViewer:
         self.bt_next_img.configure(state=NORMAL)
 
     def open_img(self):
-        self.img = filedialog.askopenfilename(filetypes=[("Image files", "*.jpg *.jpeg *.png *.bmp *.gif")])
+        self.img = filedialog.askopenfilename(filetypes=[("Image files", "*.jpg *.jpeg *.png *.bmp *.gif *.avif")])
         self.load_image_only(self.img)
 
     def load_image_only(self, img_path):
@@ -667,6 +671,10 @@ if __name__ == "__main__":
     root.iconbitmap(icon)
     root.title("TheFirstWillingImgViewer")
     root.geometry("1400x800")
-
-    app = TheFirstWillingImgViewer(root)
+    if len(sys.argv) > 1:
+        image_path = sys.argv[1]
+    else:
+        image_path = None
+    
+    app = TheFirstWillingImgViewer(root, open_with_arg=image_path)
     root.mainloop()
