@@ -562,5 +562,5 @@ class TheFirstWillingImgViewer:
 if __name__ == "__main__":
     root = Tk()
     root.geometry("1400x800")
-    app = ImageExplorer(root)
+    app = TheFirstWillingImgViewer(root)
     root.mainloop()
